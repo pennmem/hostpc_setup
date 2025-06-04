@@ -9,8 +9,9 @@ sudo ./root_steps.sh
 for TARGET_USER in ram exp
 do
   groups "$TARGET_USER" &>/dev/null ||
-    sudo adduser "$TARGET_USER"
+    sudo adduser --disabled-password "$TARGET_USER"
 
+  sudo chmod 755 /home/"$TARGET_USER"
   sudo -u "$TARGET_USER" ./user_steps.sh
 
   if [ -x "./user_specific_$TARGET_USER.sh" ]
