@@ -1,0 +1,11 @@
+#!/bin/bash
+
+SCRIPTDIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
+
+cd "$SCRIPTDIR"
+
+./xconf_settings.py
+
+grep -q .bash_aliases ~/.bashrc || echo -e "if [ -e \"\$HOME/.bash_aliases\" ]\nthen\n  . \"\$HOME/.bash_aliases\"\nfi" >>~/.bashrc
+cp files/aliases ~/.bash_aliases
+

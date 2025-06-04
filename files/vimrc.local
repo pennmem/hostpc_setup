@@ -1,0 +1,101 @@
+syntax on
+
+set list
+set listchars=tab:▸ ,trail:⎵
+noremap <C-K> :set nolist listchars=tab:\ \ <CR>
+noremap <C-L> :set list listchars=tab:▸ ,trail:⎵<CR>
+
+set autoindent
+set smartindent
+set ignorecase
+set smartcase
+
+set shiftwidth=2
+set tabstop=2
+set expandtab
+set hls
+set maxmempattern=10000000
+
+let delimitMate_expand_cr = 1
+
+au BufNewFile * let b:is_new_file = 1
+au BufWritePost *
+  \  if get(b:, 'is_new_file', 0) && getline(1) =~ '^#!'
+  \|   silent execute '!chmod +x %' | w
+  \|   let b:is_new_file = 0
+  \|   do BufRead
+  \| endif
+
+colors torte
+
+set viminfo=""
+
+if has("autocmd")
+ filetype plugin indent on
+endif
+
+" Tab indent and unindent after selecting block with ctrl-v
+vmap <Tab> >gv
+vmap <S-Tab> <gv
+vmap x xgv
+vmap # I#<Esc>
+
+augroup filetype
+  au BufRead reportbug.*                set ft=mail
+  au BufRead reportbug-*                set ft=mail
+
+  au BufNewFile,BufRead *.c,*.h,*.java,*.cc,*.cpp,*.hpp,*.C,*.pl,*.py,*.cs set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,:// shiftwidth=2 tabstop=2 expandtab smarttab softtabstop=2
+  au FileType python set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,:// shiftwidth=2 tabstop=2 expandtab smarttab softtabstop=2
+  au BufNewFile,BufRead *.c,*.h,*.cc,*.cpp,*.hpp,*.C syn keyword cType i8 u8 i16 u16 i32 u32 i64 u64 f32 f64 f80 f128
+
+  au BufNewFile,BufRead *.c,*.h,*.cc,*.cpp,*.hpp,*.C,*.java,*.scad,*.cs,*.js,*.json vmap # I//<Esc>
+
+  " Scheme / Racket / Lisp
+  au BufNewFile,BufRead *.ss,*.sls,*.scm,*.rkt,*.rktd,*.lisp vmap # I;<Esc>
+  au BufNewFile,BufRead *.ss,*.sls,*.scm,*.rkt,*.rktd,*.lisp set lisp shiftwidth=2 tabstop=2 expandtab softtabstop=2
+
+  autocmd FileType python      setlocal tw=79
+
+  au BufNewFile,BufRead *.txt,*.rtf,*.log set lbr noautoindent nosmartindent
+
+  au BufNewFile,BufRead *.tex,*.dox,*.sty,*.cls set tw=74 "noautoindent nosmartindent
+  au BufNewFile,BufRead *.rub,*.gra set lbr noautoindent nosmartindent
+  au BufNewFile,BufRead *.tex,*.sty,*.cls,*.bib vmap # I% <Esc>
+  au BufNewFile,BufRead *.tex,*.sty,*.cls,*.bib vmap % I% <Esc>
+
+  au BufRead,BufNewFile *.scad    setfiletype openscad
+
+  au BufNewFile,BufRead *.v,*.vf    set filetype=verilog
+augroup END
+
+" Disable w11 warnings about unmodified files changing on disk (e.g. log files)
+autocmd FileChangedShell * :
+
+map q gq}
+
+" Switch to hex-editor
+noremap <F8> :%!xxd<CR>
+" Switch back
+noremap <F7> :%!xxd -r<CR>
+
+map <C-Up> <C-W>k
+map <C-Down> <C-W>j
+
+" Disable increment-next-number and decrement-next-number
+noremap <C-a> <silent>
+noremap <C-x> <silent>
+
+" Disable page numbers on print
+set printoptions=paper:letter,header:0,top:28pt,bot:28pt,left:41pt,right:41pt,syntax:y,duplex:off
+" Print dialog for gvim
+set printexpr=PrintFile(v:fname_in)
+function PrintFile(fname)
+  "call system("gtklp " . a:fname)
+  "call system("evince " . a:fname)
+  call system("cd $(dirname " . a:fname . "); ps2pdf " . a:fname)
+  call system("evince " . a:fname . ".pdf")
+  call delete(a:fname)
+  call delete(a:fname . ".pdf")
+  return v:shell_error
+endfunc
+

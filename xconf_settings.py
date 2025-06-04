@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 from update_xml import *
+import os
 
 xfceconf = os.path.join(os.environ['HOME'],
                         '.config/xfce4/xfconf/xfce-perchannel-xml')
+os.system(f'mkdir -p {os.path.dirname(xfceconf)}')
 
 with UpdateXMLConf(os.path.join(xfceconf, 'xfce4-screensaver.xml')) as ux:
   ux.SetPropertyValue(['saver', 'idle-activation', 'delay'], 120)

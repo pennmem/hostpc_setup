@@ -1,0 +1,18 @@
+#!/bin/bash
+
+function ExitOut {
+  echo "Not the top, in src, or in dist, of an Elemem repository!" &&
+  exit -1
+}
+
+TOPDIR="$(basename "$(pwd)")"
+if [ "$TOPDIR" == "src" -o "$TOPDIR" == "dist" ]
+then
+  cd ..
+fi
+
+grep -q "project (Elemem" CMakeLists.txt 2>/dev/null || ExitOut
+
+cd build &&
+time make -j8
+

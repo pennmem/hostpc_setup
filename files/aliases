@@ -1,0 +1,7 @@
+alias mkcd='AF_mkcd() { mkdir "$1" && cd "$1"; }; AF_mkcd'
+alias rmcurd='AF_rmcurd() { CUR="$(basename "$(pwd)")"; cd .. && rmdir "$CUR" || cd - >/dev/null; }; AF_rmcurd'
+alias m='cd "$(cat ~/.m_dir 2>/dev/null || echo "--fail")" 2>/dev/null || echo "No directory mark set."'
+alias mm='pwd >~/.m_dir'
+alias mwd='cat ~/.m_dir 2>/dev/null || echo "No directory mark set." >&2'
+alias mclr='rm -f ~/.m_dir'
+alias glone='git clone --recurse-submodules'

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+function ExitOut {
+  echo "Not the top, in src, or in dist, of an Elemem repository!" &&
+  exit -1
+}
+
+TOPDIR="$(basename "$(pwd)")"
+if [ "$TOPDIR" == "src" -o "$TOPDIR" == "dist" ]
+then
+  cd ..
+fi
+
+grep -q "project (Elemem" CMakeLists.txt 2>/dev/null || ExitOut
+
+rm -rf build &&
+mkdir build &&
+cd build &&
+cmake .. "$@" &&
+time make -j8
+
+# For mac:
+#cmake -DCEREBUS_HW=OFF .. &&
+

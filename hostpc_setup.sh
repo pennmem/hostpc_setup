@@ -2,15 +2,17 @@
 
 SCRIPTDIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
 
-cd "$SCRIPTDIR"
+cd "$SCRIPTDIR" &&
 
-sudo apt update -y
-sudo apt upgrade -y
+sudo apt update -y &&
+sudo apt upgrade -y &&
 
-sudo fwupdmgr update
+if [ "$(which git)" == "" ]
+then
+  sudo apt install -y git
+fi &&
 
-sudo apt install -y vim-gtk3 xserver-xorg-input-synaptics aptitude git
+git pull &&
 
-./xconf_settings.py
-
+./main_steps.sh
 
