@@ -1,0 +1,5 @@
+set backupdir=~/.vim/swap//
+set directory=~/.vim/swap//
+
+au BufNewFile,BufRead */Assets/Resources/nopandas.txt set syntax=python formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,:// shiftwidth=2 tabstop=2 expandtab smarttab softtabstop=2 tw=79
+

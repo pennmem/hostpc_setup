@@ -1,0 +1,87 @@
+#!/bin/bash
+
+CC="g++"
+
+# -Wno-format-truncation because this is buggy in 7.2.0, and false-positives.
+WARNINGS="-Wall -Wextra -Wno-error=unused -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-unused-parameter -Wnull-dereference -Werror"
+#WARNINGS="-Wall -Wextra -Wno-unused -Wnull-dereference -Werror -Wno-format-truncation"
+#WARNINGS="-Wall -Wextra -Wno-unused -Werror -Wfatal-errors"
+
+FLAGS="-std=c++17 -rdynamic -O3 -funroll-loops -fdiagnostics-color=always"
+#FLAGS="-std=c++14 -rdynamic -O3 -funroll-loops -fdiagnostics-color=always"
+
+#LIBS="-ldl -lrt -lpthread"
+LIBS="-ldl -lrt -lpthread -lstdc++fs"
+
+FILE="$1"
+shift
+BASE="${FILE%.cpp}"
+
+RETVAL=0
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.cc}"
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.c}"
+  if [ "$BASE" != "$FILE" ]
+  then
+    CC="gcc"
+    FLAGS="-rdynamic -O2"
+    LIBS="$LIBS -lm"
+  fi
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.C}"
+  if [ "$BASE" != "$FILE" ]
+  then
+    CC="gcc"
+    FLAGS="-rdynamic -O2"
+    LIBS="$LIBS -lm"
+  fi
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  FILE="$BASE.cpp"
+fi
+
+if [ "$BASE" == "" -o ! -e "$FILE" ]
+then
+  echo "$0 <filename.cpp>"
+  RETVAL=-1
+else
+  if [ "$(grep -l RC_HAVE_BOOST "$FILE")" != "" ]
+  then
+    LIBS="$LIBS -lboost_regex"
+  fi
+
+  TEMPF=`mktemp`
+
+  echo "$CC" $FLAGS $WARNINGS -o "$BASE" "$FILE" "$@" $LIBS
+  "$CC" $FLAGS $WARNINGS -o "$BASE" "$FILE" "$@" $LIBS 2>&1 | tee "$TEMPF"
+
+  # If this was run straight from console and the errors are long, 
+  if [ "$SHLVL" -le 2 ]
+  then
+    if [ "$(cat "$TEMPF" | fold -w $(tput cols) | wc -l)" -ge 40 ]
+    then
+      less -R "$TEMPF"
+    fi
+  fi
+
+  if [ "$(cat "$TEMPF" | wc -l)" -gt 0 ]
+  then
+    RETVAL=1
+  fi
+
+  rm -f "$TEMPF"
+fi
+
+exit $RETVAL
+

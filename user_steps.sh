@@ -10,6 +10,7 @@ grep -q .bash_aliases ~/.bashrc || echo -e "if [ -e \"\$HOME/.bash_aliases\" ]\n
 cp files/aliases ~/.bash_aliases
 
 mkdir -p ~/.vim/swap
+chmod 700 ~/.vim/swap
 if [ ! -e ~/.vimrc ]
 then
   cp files/initial_user_vimrc ~/.vimrc

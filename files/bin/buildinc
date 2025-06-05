@@ -1,0 +1,20 @@
+#!/bin/bash
+
+function ExitOut {
+  echo "Not the top, in src, in build, or in dist, of a repository!" &&
+  exit -1
+}
+
+TOPDIR="$(basename "$(pwd)")"
+if [ "$TOPDIR" == "src" -o "$TOPDIR" == "build" -o "$TOPDIR" == "dist" ]
+then
+  cd ..
+fi
+
+grep -q "project" CMakeLists.txt 2>/dev/null || ExitOut
+
+cd build &&
+echo "$PWD": make -j8 &&
+echo &&
+time make -j8
+

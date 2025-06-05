@@ -1,0 +1,58 @@
+#!/bin/bash
+
+CC="clang++"
+WARNINGS="-Wall -Wextra -Wno-unused -Wnull-dereference -Werror -Wfatal-errors"
+#FLAGS="-std=c++14 -rdynamic -O3 -funroll-loops"
+#LIBS="-ldl -lrt -lpthread"
+FLAGS="-std=c++17 -rdynamic -O3 -funroll-loops"
+LIBS="-ldl -lrt -lpthread -lstdc++fs"
+
+FILE="$1"
+shift
+BASE="${FILE%.cpp}"
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.cc}"
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.c}"
+  if [ "$BASE" != "$FILE" ]
+  then
+    CC="gcc"
+    FLAGS="-rdynamic -O2"
+    LIBS="$LIBS -lm"
+  fi
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.C}"
+  if [ "$BASE" != "$FILE" ]
+  then
+    CC="gcc"
+    FLAGS="-rdynamic -O2"
+    LIBS="$LIBS -lm"
+  fi
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  FILE="$BASE.cpp"
+fi
+
+if [ "$BASE" == "" -o ! -e "$FILE" ]
+then
+  echo "$0 <filename.cpp>"
+else
+  if [ "$(grep -l RC_HAVE_BOOST "$FILE")" != "" ]
+  then
+    LIBS="$LIBS -lboost_regex"
+  fi
+
+  echo "$CC" $FLAGS $WARNINGS -o "$BASE" "$FILE" "$@" $LIBS
+  "$CC" $FLAGS $WARNINGS -o "$BASE" "$FILE" "$@" $LIBS
+fi
+

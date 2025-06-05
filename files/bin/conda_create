@@ -1,0 +1,45 @@
+#!/bin/bash
+
+ENVIRONMENT="$1"
+PY_VERSION="$2"
+if [ "$ENVIRONMENT" == "" -o "$PY_VERSION" == "" ]
+then
+  echo "$0 <environment_name> <python_version> [pip_packages] ..."
+  echo "Create with ipython:"
+  echo "$0 <environment_name> <python_version> -i [pip_packages] ..."
+  echo "Create with ipython and scientific libraries::"
+  echo "$0 <environment_name> <python_version> -s [pip_packages] ..."
+  exit -1
+fi
+shift
+shift
+
+extras() { true; }
+if [ "$1" == "-i" ]
+then
+  shift
+  pipenvs=("$@" ipython termcolor)
+elif [ "$1" == "-s" ]
+then
+  shift
+  pipenvs=("$@" ipython termcolor numpy scipy pandas matplotlib)
+  extras() {
+    if [ -e "$HOME/src/json_pack" ]
+    then
+      cd "$HOME/src"
+      pip install -e "./json_pack"
+    fi;
+  }
+else
+  pipenvs=("$@")
+fi
+
+eval "$(conda 'shell.bash' 'hook' 2>/dev/null)" &&
+conda create -y -n "$ENVIRONMENT" python=="$PY_VERSION" &&
+conda activate "$ENVIRONMENT" &&
+if [ ${#pipenvs[@]} -gt 0 ]; then pip install "${pipenvs[@]}"; fi &&
+extras &&
+echo &&
+echo "Environment \"$ENVIRONMENT\" successfully setup." ||
+echo "*** Error!  Did not complete environment setup! ***"
+

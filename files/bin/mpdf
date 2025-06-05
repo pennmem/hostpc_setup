@@ -1,0 +1,164 @@
+#!/bin/bash
+
+QUIET=no
+ANSWERS=no
+COMMENTS=no
+HANDOUT=no
+COPYDIR=no
+
+LOCBST="$HOME/texmf/bibtex/bst"
+if [ -e "$LOCBST" ]
+then
+  if [ "$BSTINPUTS" != "" ]
+  then
+    export BSTINPUTS="$LOCBST:$BSTINPUTS"
+  else
+    export BSTINPUTS="$LOCBST"
+  fi
+fi
+
+#while [[ "$1" != "" ]] && [[ "${1#-?}" == "" ]]
+while [[ "$1" != "" ]]
+do
+  PARSE="$1"
+  shift
+
+  if [[ "${PARSE##-*}" == "" ]]
+  then
+    if [[ "$PARSE" == "-q" ]]
+    then
+      QUIET=yes
+      continue
+    fi
+    if [[ "$PARSE" == "-f" ]]
+    then
+      OUTFILE_PREFIX="$1";
+      shift
+      continue
+    fi
+    if [[ "$PARSE" == "-c" ]]
+    then
+      COMMAND="$COMMAND$1"$'\n'
+      COPYDIR=yes
+      shift
+      continue
+    fi
+    echo "Unrecognized option $PARSE"
+  fi
+
+  if [[ "$FILE" == "" ]]
+  then
+    FILE="$PARSE"
+    continue
+  fi
+
+  echo "Extra filename on command line:  $PARSE"
+done
+
+
+BASE="${FILE%.tex}"
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.pdf}"
+fi
+
+if [ "$BASE" == "$FILE" ]
+then
+  BASE="${FILE%.}"
+fi
+
+FILE="$BASE.tex"
+OUTFILE="$OUTFILE_PREFIX$BASE.pdf"
+TEXFILE="$FILE"
+
+if [ "$BASE" == "" -o ! -e "$FILE" ]
+then
+  echo "$0 <filename.tex>"
+else
+  if [ "$COPYDIR" == "yes" ]
+  then
+    TMPDIR=`mktemp -d`
+    if [ -e figures ]
+    then
+      ln -s "$(pwd)/figures" "$TMPDIR/figures"
+    fi
+    if [ -e logos ]
+    then
+      ln -s "$(pwd)/logos" "$TMPDIR/logos"
+    fi
+    if [ -e inc ]
+    then
+      ln -s "$(pwd)/inc" "$TMPDIR/inc"
+    fi
+    if [ -e dates ]
+    then
+      ln -s "$(pwd)/dates" "$TMPDIR/dates"
+    fi
+    TMPFILE=`mktemp --suffix=.tex`
+    TEXFILE="$TMPFILE"
+    TMPBASE="$(basename "$TMPFILE")"
+    TMPPDF="${TMPBASE%.tex}.pdf"
+    echo "$COMMAND" >"$TMPFILE"
+    cat "$FILE" >>"$TMPFILE"
+
+    cp "$BASE".bib hwstyle.sty scistyle.sty presentstyle.sty lecturestyle.sty beamerouterthemeColyer*.sty beamerthemeColyer*.sty lecturehandoutnotes.sty evalstyle.sty "$TMPDIR" 2>/dev/null
+  fi
+
+  # The rubber return value is screwed up...
+  # https://bugs.launchpad.net/ubuntu/+source/rubber/+bug/412465
+  #rubber -d "$FILE" && evince "$OUTFILE"
+  echo rubber -fd "$FILE"
+  TEMPF=`mktemp`
+  if [ "$COPYDIR" == "yes" ]
+  then
+    rubber --into "$TMPDIR" -fd "$TMPFILE" &>"$TEMPF"
+  else
+    rubber -fd "$FILE" &>"$TEMPF"
+  fi
+  LINECOUNT="$(cat "$TEMPF" | perl -ne 'print $_ unless (/^compiling / || /^running: / || /^executing: /)' | wc -l)"
+  cat "$TEMPF"
+  rm -f "$TEMPF"
+  if [ $LINECOUNT -le 0 ]
+  then
+    if [ "$(grep -l '\\ref{' "$TEXFILE")" != "" ]
+    then
+      echo rubber -fd "$FILE"
+      TEMPF=`mktemp`
+      if [ "$COPYDIR" == "yes" ]
+      then
+        rubber --into "$TMPDIR" -fd "$TMPFILE" &>"$TEMPF"
+      else
+        rubber -fd "$FILE" &>"$TEMPF"
+      fi
+      LINECOUNT="$(cat "$TEMPF" | perl -ne 'print $_ unless (/^compiling / || /^running: / || /^executing: /)' | wc -l)"
+      cat "$TEMPF"
+      rm -f "$TEMPF"
+    fi
+  fi
+
+  if [ "$COPYDIR" == "yes" ]
+  then
+    if [ $LINECOUNT -le 0 ]
+    then
+      cp "$TMPDIR/$TMPPDF" "$OUTFILE"
+    fi
+    #rm -rf "$TMPDIR" "$TMPFILE"
+  fi
+
+  if [ $LINECOUNT -le 0 ]
+  then
+    if [ "$COPYDIR" == "no" ]
+    then
+      rm -f "$BASE.aux" "$BASE.log" "$BASE.out" "$BASE.toc" "$BASE.nav" "$BASE.snm" "$BASE.rubbercache" "$BASE.blg" "$BASE.bbl"
+    fi
+
+    if [ "$QUIET" == "no" ]
+    then
+      evince "$OUTFILE"
+    fi
+    echo "Created:  $OUTFILE"
+  fi
+
+fi
+
