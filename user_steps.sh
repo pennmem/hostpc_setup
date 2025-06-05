@@ -9,3 +9,9 @@ cd "$SCRIPTDIR"
 grep -q .bash_aliases ~/.bashrc || echo -e "if [ -e \"\$HOME/.bash_aliases\" ]\nthen\n  . \"\$HOME/.bash_aliases\"\nfi" >>~/.bashrc
 cp files/aliases ~/.bash_aliases
 
+mkdir -p ~/.vim/swap
+if [ ! -e ~/.vimrc ]
+then
+  cp files/initial_user_vimrc ~/.vimrc
+fi
+
