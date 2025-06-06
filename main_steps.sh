@@ -4,13 +4,12 @@ SCRIPTDIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" >/dev/null 2>&
 
 cd "$SCRIPTDIR"
 
+echo "Running root steps."
 sudo ./root_steps.sh
 
 for TARGET_USER in ram exp
 do
-  groups "$TARGET_USER" &>/dev/null ||
-    sudo adduser --disabled-password "$TARGET_USER"
-
+  echo "Running $TARGET_USER steps."
   sudo chmod 755 /home/"$TARGET_USER"
   sudo -u "$TARGET_USER" ./user_steps.sh
 

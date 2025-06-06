@@ -1,0 +1,44 @@
+#!/bin/bash
+
+LOGDIR="$HOME/log_elemembuild"
+mkdir -p "$LOGDIR"
+LOG="$LOGDIR/elemem_check.log"
+
+echo "Checking status on $(date)" &>>"$LOG"
+
+cd /usr/local/src/elemem &&
+
+if [ ! -e .git ]
+then
+  git clone --recurse-submodules https://github.com/pennmem/elemem.git .
+else
+  git checkout master &&
+  git pull && git submodule update --init --recursive
+fi &>>"$LOG" &&
+STATUS=completed || STATUS=failed
+
+echo "Git update $STATUS." &>>"$LOG"
+
+LASTTAG="$(git tag 2>>"$LOG"| perl -ne 'print $_ if (/^\d\d\d\d-\d\d-\d\d$/)' | sort -n | tail -n 1)"
+TARGET="/usr/local/share/elemem/$LASTTAG"
+
+if [ -e "$TARGET" ]
+then
+  echo "Latest version already $LASTTAG, nothing more to do." &>>"$LOG"
+  exit
+else
+  BLOGNAME="elemem_"$LASTTAG"_build_$(date +%F_%H-%M-%S).log"
+  BLOG="$LOGDIR/$BLOGNAME"
+  echo "Initiating $LASTTAG build in log file $BLOGNAME" &>>"$LOG"
+fi
+
+git checkout "$LASTTAG" &>>"$BLOG" &&
+$HOME/bin/elemem_cleanbuild &>>"$BLOG" &&
+mkdir "$TARGET" &>>"$BLOG" &&
+cp -a dist/* "$TARGET"/ &>>"$BLOG" &&
+cd /usr/local/share/elemem &&
+ln -nsf "$LASTTAG" /usr/local/share/elemem/default &>>"$BLOG" &&
+FINISH_DATE="$(date)" &&
+echo "New Elemem $LASTTAG build complete, and set to default $FINISH_DATE." &>>"$BLOG" &&
+echo "New Elemem $LASTTAG build complete, and set to default $FINISH_DATE." &>>"$LOG"
+

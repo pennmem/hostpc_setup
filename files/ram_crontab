@@ -1,0 +1,1 @@
+30 23 * * *     /home/ram/bin/elemem_tagbuilder  # AUTOSETUP
